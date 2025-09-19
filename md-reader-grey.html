@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Markdown Reader</title>
+  
+  <script src="purify.min.js"></script>
+  <script src="marked.umd.js"></script>
+  
+  <style>
+  body {
+    color: #666;
+    background-color: #ccc;
+    margin-left: 50px;
+    margin-right: 50px;
+    margin-bottom: 100px;
+  }
+  code {
+    color: #555;
+    background-color: #ddc;
+  }
+  pre, pre>code {
+    color: #666;
+    background-color: #ddd;
+  }
+  a:link {
+    color: #01579b;
+  }
+  </style>
+</head>
+<body>
+  <p><input type="file" id="upload-btn" accept=".md,.txt"></input></p>
+  <div id="alert-when-upload" class="alert-danger"></div>
+</body>
+
+<script>
+"use strict";
+
+const uploadBtn       = $query('#upload-btn');
+const alertWhenUpload = $query("#alert-when-upload");
+const body            = $query("body");
+
+uploadBtn.addEventListener('change', event => {
+  alertWhenUpload.innerText = "";
+  const file = event.target.files[0];
+  handleFile(file);
+});
+
+async function handleFile(file) {
+  if (!file) return;
+  try {
+    // https://developer.mozilla.org/en-US/docs/Web/API/Blob/text
+    const md = await file.text();
+    const dirty = marked.parse(md);
+    const clean = DOMPurify.sanitize(dirty);
+    body.innerHTML = clean;
+  } catch (error) {
+      alertWhenUpload.innerText = "出错： " + error;
+  }
+}
+
+function $query(selectors) {
+  return document.querySelector(selectors);
+}
+
+// https://developer.mozilla.org/en-US/docs/Web/API/File_API/Using_files_from_web_applications
+const dropbox = $query("html");
+dropbox.addEventListener("dragenter", dragenter, false);
+dropbox.addEventListener("dragover", dragover, false);
+dropbox.addEventListener("drop", drop, false);
+
+function drop(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  handleFile(e.dataTransfer.files[0]);
+}
+
+function dragenter(e) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+
+function dragover(e) {
+  e.stopPropagation();
+  e.preventDefault();
+}
+</script>
+</html>
